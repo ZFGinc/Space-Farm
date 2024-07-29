@@ -3,63 +3,88 @@ using UnityEngine;
 
 public class TileStateController : MonoBehaviour
 {
-    public enum State
+    private enum TileState
     {
-        NULL,    
-        Grass,
-        Bald,
-        Plow,
-        WateredPlow,
-        IsGrowing,
-        IsGrowed
-    }
-    public enum Event
-    {
-        ExitNull,
-        Cut,
-        Plowed,
-        Watering,
-        Seed,
-        FullyGrow,
-        Collect
+        None = 0,
+        GrassOrFlower = 1,
+        ArableLand = 2,
+        ArableLandWatered = 3,
+        Planted = 4
     }
 
-    public FiniteStateMachine<State,Event> fsm = new FiniteStateMachine<State,Event>(State.NULL);
-    public event Action Default, ArableLand;
-    public event Action<bool> Grass;
+    public event Action Default, ArableLand, ArableLandWatered;
+    public event Action<bool> Grass, Flower;
+    //public event Action<Plant> Planting;
 
     [SerializeField, Range(0f,1f)] private float _targetPerlin = 0.7f;
 
-    private Vector2 _coordinates;
+    private TileState _currentState;
+    //private Plant _currentPlant;
+    //private Vector2 _coordinates;
 
-    private void Start()
+    //public Plant GetCurrentPlant => _currentPlant
+
+    //private void Start()
+    //{
+    //    _coordinates = new Vector2(transform.position.x, transform.position.z);
+    //}
+
+    private void RemoveGrassOrFlower()
     {
-        _coordinates = new Vector2(transform.position.x, transform.position.z);
-
-        InitializeStateMashite();
+        Grass?.Invoke(false);
+        Flower?.Invoke(false);
+        _currentState = TileState.None;
     }
 
-    private void InitializeStateMashite()
+    private void Plow()
     {
-        fsm.AddTransition(State.Grass, Event.Cut, State.Bald);
-        fsm.AddTransition(State.Bald, Event.Plowed, State.Plow);
-        fsm.AddTransition(State.Plow, Event.Watering, State.WateredPlow);
-        fsm.AddTransition(State.WateredPlow, Event.Seed, State.IsGrowing);
-        fsm.AddTransition(State.IsGrowing, Event.FullyGrow, State.IsGrowed);
-        fsm.AddTransition(State.IsGrowed, Event.Collect, State.Plow);
+        ArableLand?.Invoke();
+        _currentState = TileState.ArableLand;
     }
 
-    public void GenerateGrass()
+    private void Watered()
+    {
+        ArableLandWatered?.Invoke();
+        _currentState = TileState.ArableLandWatered;
+    }
+
+    private void Planting()
+    {
+        //_currentPlant = Hotbar.GetCurrentItem();
+        //Planting(_currentPlant);
+
+        _currentState = TileState.Planted;
+    }
+
+    public void ChangeState()
+    {
+        switch(_currentState)
+        {
+            case TileState.None: Plow(); break;
+            case TileState.GrassOrFlower: RemoveGrassOrFlower(); break;
+            case TileState.ArableLand: Watered(); break;
+            case TileState.ArableLandWatered: Planting(); break;
+            default: break;
+        }
+    }
+
+    public void GenerateGrassOrFlower(float perlinValue)
     {
         Default?.Invoke();
+        _currentState = TileState.None;
 
-        if (UnityEngine.Random.Range(0f,1f) >= _targetPerlin)
+        if (perlinValue >= _targetPerlin)
         {
-            fsm.AddTransition(State.NULL,Event.ExitNull, State.Grass);
             Grass?.Invoke(true);
+            _currentState = TileState.GrassOrFlower;
             return;
         }
 
-        fsm.AddTransition(State.NULL,Event.ExitNull, State.Bald);
+        if (perlinValue / 2 >= .2)
+        {
+            Flower?.Invoke(true);
+            _currentState = TileState.GrassOrFlower;
+            return;
+        }
     }
 }

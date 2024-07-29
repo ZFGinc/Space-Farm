@@ -9,7 +9,6 @@ public class TileGenerator : MonoBehaviour
     [SerializeField] private List<GameObject> _rocksAndTrees;
     [Space]
     [SerializeField] private int _spawnRadius = 10;
-    [SerializeField] private int _stepsAfterLastTree = 20;
     [SerializeField, Range(0, 99)] private int _seed;
 
     private float _scalePerlin = 20f;
@@ -25,6 +24,7 @@ public class TileGenerator : MonoBehaviour
         Vector3Int position = new Vector3Int(0, 1, 0);
         System.Random rand = new System.Random(_seed);
         int tileIndex = 0;
+        float grassPerlin = 0;
         float perlinX = 0;
         float perlinY = 0;
 
@@ -43,7 +43,9 @@ public class TileGenerator : MonoBehaviour
                 if (Mathf.PerlinNoise(perlinX, perlinY) > .5f) tileIndex++;
                 if (Mathf.PerlinNoise(perlinX, perlinY) > .75f) tileIndex++;
 
-                Instantiate(_tiles[tileIndex], position, Quaternion.identity, transform).GenerateGrass();
+                grassPerlin = rand.Next(100) / 100f;
+
+                Instantiate(_tiles[tileIndex], position, Quaternion.identity, transform).GenerateGrassOrFlower(grassPerlin);
                 tileIndex = 0;
             }
         }

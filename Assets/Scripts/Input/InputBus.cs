@@ -2,7 +2,6 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-[Serializable]
 public enum ControlScheme
 {
     KeyboardMouse, Gamepad
@@ -12,14 +11,15 @@ public enum ControlScheme
 public class InputBus : MonoBehaviour
 {
     private MainInputMap _mainInputMap;
+    private ActionController _actionController;
     private IControllable _controllable;
-    private ITileChecker _tileChecker;
+
     private ControlScheme _currentInputDevice = ControlScheme.KeyboardMouse;
 
     private void Start()
     {
         Initialize();
-        SubscripbeInputActions();
+        SubscripbeInputs();
     }
 
     private void Update()
@@ -36,7 +36,7 @@ public class InputBus : MonoBehaviour
         _mainInputMap.Enable();
 
         _controllable = GetComponent<IControllable>();
-        _tileChecker = GetComponent<ITileChecker>();
+        _actionController = GetComponent<ActionController>();
 
         if (_controllable == null)
         {
@@ -44,30 +44,57 @@ public class InputBus : MonoBehaviour
         }
     }
 
-    private void OnDestroy()
-    {
-        UnscripbeInputActions();
-    }
-
     private void OnDisable()
     {
-        UnscripbeInputActions();
+        UnscripbeInputs();
     }
 
-    private void SubscripbeInputActions()
+    private void SubscripbeInputs()
     {
+        //Moving
         _mainInputMap.Player.Jump.performed += OnJumpPerformed;
         _mainInputMap.Player.Sprint.performed += OnSprintPerformed;
         _mainInputMap.Player.Sprint.canceled += OnSprintCanceled;
+        //
+
+        //Actions
+        _mainInputMap.Actions.GrabOrReleaseObject.performed += OnGrabOrReleaseObjectPerformed;    
         _mainInputMap.Actions.Usage.performed += OnUsagePerformed;
+        _mainInputMap.Actions.Shooting.performed += OnShootingPerformed;
+        _mainInputMap.Actions.Shooting.canceled += OnShootingCanceled;
+        //
+
+        //Inventory
+
+        //
+
+        //Building
+
+        //
     }
 
-    private void UnscripbeInputActions()
+    private void UnscripbeInputs()
     {
+        //Moving
         _mainInputMap.Player.Jump.performed -= OnJumpPerformed;
         _mainInputMap.Player.Sprint.performed -= OnSprintPerformed;
         _mainInputMap.Player.Sprint.canceled -= OnSprintCanceled;
+        //
+
+        //Actions
+        _mainInputMap.Actions.GrabOrReleaseObject.performed -= OnGrabOrReleaseObjectPerformed;
         _mainInputMap.Actions.Usage.performed -= OnUsagePerformed;
+        _mainInputMap.Actions.Shooting.performed -= OnShootingPerformed;
+        _mainInputMap.Actions.Shooting.canceled -= OnShootingCanceled;
+        //
+
+        //Inventory
+
+        //
+
+        //Building
+
+        //
     }
 
     private void CheckInputDevice()
@@ -125,8 +152,23 @@ public class InputBus : MonoBehaviour
         _controllable.Sprint(false);
     }
 
+    private void OnGrabOrReleaseObjectPerformed(InputAction.CallbackContext obj)
+    {
+        _actionController.GrabOrRelese();
+    }
+
     private void OnUsagePerformed(InputAction.CallbackContext obj)
     {
-        _tileChecker.Action();
+        _actionController.Usage();
+    }
+
+    private void OnShootingPerformed(InputAction.CallbackContext obj)
+    {
+        _actionController.Shooting(true);
+    }
+
+    private void OnShootingCanceled(InputAction.CallbackContext obj)
+    {
+        _actionController.Shooting(false);
     }
 }
