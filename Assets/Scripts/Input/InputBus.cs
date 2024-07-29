@@ -13,6 +13,7 @@ public class InputBus : MonoBehaviour
 {
     private MainInputMap _mainInputMap;
     private IControllable _controllable;
+    private ITileChecker _tileChecker;
     private ControlScheme _currentInputDevice = ControlScheme.KeyboardMouse;
 
     private void Start()
@@ -35,10 +36,11 @@ public class InputBus : MonoBehaviour
         _mainInputMap.Enable();
 
         _controllable = GetComponent<IControllable>();
+        _tileChecker = GetComponent<ITileChecker>();
 
         if (_controllable == null)
         {
-            throw new Exception("Чет какая-то хуйня получается");
+            throw new Exception("пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ-пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ");
         }
     }
 
@@ -57,6 +59,7 @@ public class InputBus : MonoBehaviour
         _mainInputMap.Player.Jump.performed += OnJumpPerformed;
         _mainInputMap.Player.Sprint.performed += OnSprintPerformed;
         _mainInputMap.Player.Sprint.canceled += OnSprintCanceled;
+        _mainInputMap.Actions.Usage.performed += OnUsagePerformed;
     }
 
     private void UnscripbeInputActions()
@@ -64,6 +67,7 @@ public class InputBus : MonoBehaviour
         _mainInputMap.Player.Jump.performed -= OnJumpPerformed;
         _mainInputMap.Player.Sprint.performed -= OnSprintPerformed;
         _mainInputMap.Player.Sprint.canceled -= OnSprintCanceled;
+        _mainInputMap.Actions.Usage.performed -= OnUsagePerformed;
     }
 
     private void CheckInputDevice()
@@ -119,5 +123,10 @@ public class InputBus : MonoBehaviour
     private void OnSprintCanceled(InputAction.CallbackContext obj)
     {
         _controllable.Sprint(false);
+    }
+
+    private void OnUsagePerformed(InputAction.CallbackContext obj)
+    {
+        _tileChecker.Action();
     }
 }

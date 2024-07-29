@@ -43,7 +43,7 @@ public class TileGenerator : MonoBehaviour
                 if (Mathf.PerlinNoise(perlinX, perlinY) > .5f) tileIndex++;
                 if (Mathf.PerlinNoise(perlinX, perlinY) > .75f) tileIndex++;
 
-                Instantiate(_tiles[tileIndex], position, Quaternion.identity, transform).GenerateGrass(rand.Next());
+                Instantiate(_tiles[tileIndex], position, Quaternion.identity, transform).GenerateGrass();
                 tileIndex = 0;
             }
         }
