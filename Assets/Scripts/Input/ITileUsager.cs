@@ -1,4 +1,4 @@
 public interface ITileUsager
 {
-    void Usage();
+    void Usage(int idObject);
 }

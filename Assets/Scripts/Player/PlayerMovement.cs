@@ -1,10 +1,11 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class PlayerMovement : MonoBehaviour, IControllable
 {
-    public event Action<bool> IsMove, IsSprint, IsGround;
+    public event Action<bool> LockMove, IsMove, IsSprint, IsGround;
     public event Action IsJump;
 
     [SerializeField, Range(1, 10)] private float _speedMovement = 5f;
@@ -23,6 +24,7 @@ public class PlayerMovement : MonoBehaviour, IControllable
     private float _velocity;
     private bool _isGrounded;
     private bool _isSprint;
+    private bool _isLockMove = false;
 
     private float CurrentSpeed => _speedMovement * (_isSprint ? _sprintMultiplayer : 1);
 
@@ -37,7 +39,7 @@ public class PlayerMovement : MonoBehaviour, IControllable
 
     private void OnEnable()
     {
-        _playerAnimator.Subsribe(this);
+        _playerAnimator.SubsribeMoving(this);
     }
 
     private void FixedUpdate()
@@ -64,7 +66,7 @@ public class PlayerMovement : MonoBehaviour, IControllable
         else
             rotationDirection = RotateWithStick();
 
-        if (rotationDirection == null) return;
+        if (rotationDirection == null || _isLockMove) return;
 
         transform.rotation = Quaternion.RotateTowards(transform.rotation, rotationDirection.Value, Time.fixedDeltaTime * SpeedRotation);
     }
@@ -107,7 +109,7 @@ public class PlayerMovement : MonoBehaviour, IControllable
 
     private void MoveInternal()
     {
-        if (_moveDirection.sqrMagnitude == 0)
+        if (_moveDirection.sqrMagnitude == 0 || _isLockMove)
         {
             IsMove?.Invoke(false);
             return;
@@ -128,6 +130,17 @@ public class PlayerMovement : MonoBehaviour, IControllable
     private bool IsOnTheGround()
     {
         return Physics.CheckSphere(_groundCheckerPivot.position, RadiusChecker, _groundLayer);
+    }
+
+    private IEnumerator LockMoveByTime(float time)
+    {
+        _isLockMove = true;
+        LockMove?.Invoke(true);
+
+        yield return new WaitForSeconds(time);
+
+        _isLockMove = false;
+        LockMove?.Invoke(false);
     }
 
     public void SwitchControlScheme(ControlScheme scheme)
@@ -157,5 +170,10 @@ public class PlayerMovement : MonoBehaviour, IControllable
     public void CursorMove(Vector3 direction)
     {
         _cursorDirection = direction;
+    }
+
+    public void LockMoving(float time)
+    {
+        StartCoroutine(LockMoveByTime(time));
     }
 }
